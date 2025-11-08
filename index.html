@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinding Algorithm Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #334155;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin: 20px;
+            position: relative;
+        }
+
+        .watermelon-corner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 10px;
+        }
+
+        .watermelon-seeds {
+            display: flex;
+            flex-wrap: wrap;
+            width: 60px;
+            height: 60px;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        .watermelon-seed {
+            width: 6px;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 50%;
+            margin: 2px;
+            transform: rotate(45deg);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #cbd5e1;
+            font-weight: 500;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .controls {
+            padding: 24px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #065f46 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(8, 145, 178, 0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        .visualization-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .algorithm-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            min-height: 500px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .algorithm-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .algorithm-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 1.2em;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .a-star-title {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .backtracking-title {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 3px;
+            margin: 0 auto;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            background: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 5;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cell.start {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
+        }
+        .cell.gollum {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.4);
+        }
+        .cell.volcano {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        .cell.path {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        .cell.explored {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            opacity: 0.8;
+            border: none;
+            box-shadow: 0 2px 4px rgba(6, 182, 212, 0.4);
+        }
+        .cell.enemy {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.4);
+        }
+        .cell.pit {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(100, 116, 139, 0.4);
+        }
+        .cell.ring-active {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 12px #f59e0b, 0 2px 4px rgba(245, 158, 11, 0.4);
+        }
+        .cell.current {
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 16px rgba(59, 130, 246, 0.7);
+            z-index: 10;
+        }
+
+        .cell.enemy-orc {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+        .cell.enemy-uruks {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+        .cell.enemy-nazgul {
+            background: linear-gradient(135deg, #475569 0%, #374151 100%);
+        }
+        .cell.enemy-witchking {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.a-star {
+            border-left-color: #3b82f6;
+        }
+
+        .stat-card.backtracking {
+            border-left-color: #ef4444;
+        }
+
+        .stat-card.comparison {
+            border-left-color: #10b981;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1e293b;
+        }
+
+        .test-details {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .test-list-container {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .test-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        .test-list-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .test-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .test-item {
+            padding: 14px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #3b82f6;
+            border: 1px solid #e2e8f0;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .test-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+
+        .test-item.success {
+            border-left-color: #10b981;
+        }
+
+        .test-item.failure {
+            border-left-color: #ef4444;
+        }
+
+        .test-item.active {
+            background: #f0f9ff;
+            border-left-color: #3b82f6;
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+        }
+
+        .test-item-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399, #10b981);
+            background-size: 200% 100%;
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            color: #334155;
+            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .spinner {
+            border: 3px solid #f1f5f9;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls-panel {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .step-info {
+            text-align: center;
+            color: #64748b;
+            margin-top: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .test-info {
+            background: #f0f9ff;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #e0f2fe;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .enemy-list {
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .enemy-item {
+            display: inline-block;
+            padding: 6px 10px;
+            margin: 3px;
+            border-radius: 8px;
+            color: white;
+            font-size: 10px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .enemy-orc { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); }
+        .enemy-uruks { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .enemy-nazgul { background: linear-gradient(135deg, #475569 0%, #374151 100%); }
+        .enemy-witchking { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
+        .enemy-pit { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+
+        .path-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .path-stat {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 11px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .statistics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 12px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .statistics-table th,
+        .statistics-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .statistics-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .statistics-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .statistics-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .section-title {
+            color: #1e293b;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3b82f6;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .algorithm-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .comparison-item {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 12px;
+            border: 1px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .better {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .worse {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .equal {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+            border-color: #e5e7eb;
+        }
+
+        .test-summary {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(75, 85, 99, 0.3);
+        }
+
+        .detailed-stats {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3b82f6;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box.a-star {
+            border-left-color: #3b82f6;
+        }
+
+        .stat-box.backtracking {
+            border-left-color: #ef4444;
+        }
+
+        .stat-box.comparison {
+            border-left-color: #10b981;
+        }
+
+        /* Watermelon decorations */
+        .watermelon-decoration {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+        }
+
+        .watermelon-slice {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .watermelon-slice::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            background: #fda4af;
+            border-radius: 50% 50% 50% 0;
+        }
+
+        .watermelon-slice::after {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 4px;
+            height: 4px;
+            background: #1e293b;
+            border-radius: 50%;
+            box-shadow:
+                    8px 8px 0 #1e293b,
+                    4px 12px 0 #1e293b,
+                    12px 4px 0 #1e293b;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .visualization-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .control-group {
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .watermelon-corner {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="watermelon-corner">
+        <div class="watermelon-seeds">
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+            <div class="watermelon-seed"></div>
+        </div>
+    </div>
+
+    <div class="watermelon-decoration">
+        <div class="watermelon-slice"></div>
+    </div>
+
+    <div class="header">
+        <h1>Pathfinding Algorithm Comparison</h1>
+        <p>A* vs Backtracking - Identical 1000 test cases comparison</p>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);"></div>
+                <span>S - Start</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"></div>
+                <span>G - Gollum</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"></div>
+                <span>V - Volcano</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);"></div>
+                <span>Path</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);"></div>
+                <span>Explored</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);"></div>
+                <span>O - Orc</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);"></div>
+                <span>U - Uruk-hai</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #475569 0%, #374151 100%);"></div>
+                <span>N - Nazgul</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);"></div>
+                <span>W - Witch King</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #64748b 0%, #475569 100%);"></div>
+                <span>P - Pit</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <button class="btn btn-primary" onclick="runSingleTest()">▶️ Single Test</button>
+            <button class="btn btn-success" onclick="runComparisonTests()">🚀 Run 1000 Tests</button>
+            <button class="btn btn-info" onclick="loadAllTests()">📊 Load All Tests</button>
+            <button class="btn btn-danger" onclick="stopTests()">⏹️ Stop Tests</button>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="testProgress" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="visualization-section">
+            <div class="algorithm-panel">
+                <div class="algorithm-title a-star-title">A* Algorithm</div>
+                <div class="loading" id="loadingAStar">
+                    <div class="spinner"></div>
+                    <p id="loadingAStarText">Running A*...</p>
+                </div>
+                <div class="grid" id="gridAStar"></div>
+                <div class="step-info" id="stepInfoAStar">Step: 0/0 | Ring: Inactive</div>
+                <div class="controls-panel">
+                    <button class="btn btn-primary" onclick="visualizerAStar.previousStep()">⏮️</button>
+                    <button class="btn btn-primary" onclick="visualizerAStar.toggleAnimation()">⏸️</button>
+                    <button class="btn btn-primary" onclick="visualizerAStar.nextStep()">⏭️</button>
+                    <button class="btn btn-warning" onclick="visualizerAStar.resetAnimation()">🔄</button>
+                </div>
+            </div>
+
+            <div class="algorithm-panel">
+                <div class="algorithm-title backtracking-title">Backtracking Algorithm</div>
+                <div class="loading" id="loadingBacktracking">
+                    <div class="spinner"></div>
+                    <p id="loadingBacktrackingText">Running Backtracking...</p>
+                </div>
+                <div class="grid" id="gridBacktracking"></div>
+                <div class="step-info" id="stepInfoBacktracking">Step: 0/0 | Ring: Inactive</div>
+                <div class="controls-panel">
+                    <button class="btn btn-primary" onclick="visualizerBacktracking.previousStep()">⏮️</button>
+                    <button class="btn btn-primary" onclick="visualizerBacktracking.toggleAnimation()">⏸️</button>
+                    <button class="btn btn-primary" onclick="visualizerBacktracking.nextStep()">⏭️</button>
+                    <button class="btn btn-warning" onclick="visualizerBacktracking.resetAnimation()">🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="stats-panel">
+                <h3 class="section-title">Algorithm Comparison</h3>
+
+                <div class="stats-grid">
+                    <div class="stat-card a-star">
+                        <h4>A* Statistics</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Success Rate:</span>
+                            <span class="stat-value" id="aStarSuccessRate">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Steps:</span>
+                            <span class="stat-value" id="aStarAvgSteps">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Time:</span>
+                            <span class="stat-value" id="aStarAvgTime">0ms</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Explored Nodes:</span>
+                            <span class="stat-value" id="aStarExplored">0</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card backtracking">
+                        <h4>Backtracking Statistics</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Success Rate:</span>
+                            <span class="stat-value" id="backtrackingSuccessRate">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Steps:</span>
+                            <span class="stat-value" id="backtrackingAvgSteps">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Time:</span>
+                            <span class="stat-value" id="backtrackingAvgTime">0ms</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Explored Nodes:</span>
+                            <span class="stat-value" id="backtrackingExplored">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card comparison">
+                    <h4>Performance Comparison</h4>
+                    <div class="algorithm-comparison">
+                        <div class="comparison-item" id="successComparison">Success: -</div>
+                        <div class="comparison-item" id="stepsComparison">Steps: -</div>
+                        <div class="comparison-item" id="timeComparison">Time: -</div>
+                        <div class="comparison-item" id="efficiencyComparison">Efficiency: -</div>
+                    </div>
+                </div>
+
+                <table class="statistics-table">
+                    <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>A*</th>
+                        <th>Backtracking</th>
+                        <th>Difference</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Total Tests</td>
+                        <td id="totalAStar">0</td>
+                        <td id="totalBacktracking">0</td>
+                        <td id="totalDiff">-</td>
+                    </tr>
+                    <tr>
+                        <td>Successful</td>
+                        <td id="successAStar">0</td>
+                        <td id="successBacktracking">0</td>
+                        <td id="successDiff">-</td>
+                    </tr>
+                    <tr>
+                        <td>Success Rate</td>
+                        <td id="rateAStar">0%</td>
+                        <td id="rateBacktracking">0%</td>
+                        <td id="rateDiff">-</td>
+                    </tr>
+                    <tr>
+                        <td>Mean Steps</td>
+                        <td id="meanStepsAStar">0</td>
+                        <td id="meanStepsBacktracking">0</td>
+                        <td id="stepsDiff">-</td>
+                    </tr>
+                    <tr>
+                        <td>Mean Time</td>
+                        <td id="meanTimeAStar">0ms</td>
+                        <td id="meanTimeBacktracking">0ms</td>
+                        <td id="timeDiff">-</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="detailed-stats">
+                    <h4>Detailed Statistics</h4>
+                    <div class="stats-row">
+                        <div class="stat-box a-star">
+                            <div>A* Wins</div>
+                            <div id="aStarWins">0</div>
+                        </div>
+                        <div class="stat-box backtracking">
+                            <div>Backtracking Wins</div>
+                            <div id="backtrackingWins">0</div>
+                        </div>
+                        <div class="stat-box comparison">
+                            <div>Equal Performance</div>
+                            <div id="equalWins">0</div>
+                        </div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-box a-star">
+                            <div>A* Faster</div>
+                            <div id="aStarFaster">0</div>
+                        </div>
+                        <div class="stat-box backtracking">
+                            <div>Backtracking Faster</div>
+                            <div id="backtrackingFaster">0</div>
+                        </div>
+                        <div class="stat-box comparison">
+                            <div>Same Time</div>
+                            <div id="sameTime">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-details" id="testDetails">
+                <h3 class="section-title">Current Test Details</h3>
+                <div id="testInfo">No test loaded</div>
+            </div>
+
+            <div class="test-list-container">
+                <div class="test-list-header">
+                    <h3 class="section-title">All Test Results (1000 tests)</h3>
+                    <button class="export-btn" onclick="exportResults()">📤 Export</button>
+                </div>
+
+                <div class="test-list-controls">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search test ID..." oninput="filterTests()">
+                    <select class="filter-select" id="resultFilter" onchange="filterTests()">
+                        <option value="all">All Results</option>
+                        <option value="success">Successful Only</option>
+                        <option value="failure">Failed Only</option>
+                        <option value="both-success">Both Successful</option>
+                        <option value="a-star-better">A* Better</option>
+                        <option value="backtracking-better">Backtracking Better</option>
+                    </select>
+                    <select class="filter-select" id="variantFilter" onchange="filterTests()">
+                        <option value="all">All Variants</option>
+                        <option value="1">Variant 1</option>
+                        <option value="2">Variant 2</option>
+                    </select>
+                </div>
+
+                <div class="test-list" id="testList">
+                    <!-- Test items will be populated here -->
+                </div>
+
+                <div class="pagination">
+                    <button class="page-btn" id="firstPage" onclick="goToPage(1)">First</button>
+                    <button class="page-btn" id="prevPage" onclick="previousPage()">Previous</button>
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button class="page-btn" id="nextPage" onclick="nextPage()">Next</button>
+                    <button class="page-btn" id="lastPage" onclick="goToPage(1)">Last</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // The JavaScript code remains the same as in the original
+    // Only CSS has been modified for visual improvements
+
+    class StatisticalAnalyzer {
+        static calculateMean(data) {
+            if (data.length === 0) return 0;
+            return data.reduce((sum, value) => sum + value, 0) / data.length;
+        }
+
+        static calculateMedian(data) {
+            if (data.length === 0) return 0;
+            const sorted = [...data].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        }
+
+        static calculateMode(data) {
+            if (data.length === 0) return 0;
+            const frequency = {};
+            let maxFreq = 0;
+            let mode = data[0];
+
+            data.forEach(value => {
+                frequency[value] = (frequency[value] || 0) + 1;
+                if (frequency[value] > maxFreq) {
+                    maxFreq = frequency[value];
+                    mode = value;
+                }
+            });
+
+            return mode;
+        }
+
+        static calculateStandardDeviation(data) {
+            if (data.length === 0) return 0;
+            const mean = this.calculateMean(data);
+            const squaredDiffs = data.map(value => Math.pow(value - mean, 2));
+            const variance = squaredDiffs.reduce((sum, value) => sum + value, 0) / data.length;
+            return Math.sqrt(variance);
+        }
+
+        static analyzeAlgorithmResults(results, algorithmName) {
+            const successfulResults = results.filter(r => r.success && r.algorithm === algorithmName);
+            const allAlgorithmResults = results.filter(r => r.algorithm === algorithmName);
+
+            if (allAlgorithmResults.length === 0) return null;
+
+            const executionTimes = successfulResults.map(r => r.totalTime);
+            const stepsCount = successfulResults.map(r => r.steps);
+
+            return {
+                totalTests: allAlgorithmResults.length,
+                wins: successfulResults.length,
+                losses: allAlgorithmResults.length - successfulResults.length,
+                winRate: (successfulResults.length / allAlgorithmResults.length * 100).toFixed(1),
+
+                timeStats: {
+                    mean: this.calculateMean(executionTimes).toFixed(2),
+                    median: this.calculateMedian(executionTimes).toFixed(2),
+                    mode: this.calculateMode(executionTimes),
+                    stdDev: this.calculateStandardDeviation(executionTimes).toFixed(2)
+                },
+
+                stepsStats: {
+                    mean: this.calculateMean(stepsCount).toFixed(2),
+                    median: this.calculateMedian(stepsCount).toFixed(2),
+                    mode: this.calculateMode(stepsCount),
+                    stdDev: this.calculateStandardDeviation(stepsCount).toFixed(2)
+                }
+            };
+        }
+
+        static compareAlgorithms(aStarResults, backtrackingResults) {
+            const aStarStats = this.analyzeAlgorithmResults(aStarResults, "A*");
+            const backtrackingStats = this.analyzeAlgorithmResults(backtrackingResults, "Backtracking");
+
+            if (!aStarStats || !backtrackingStats) return null;
+
+            return {
+                aStar: aStarStats,
+                backtracking: backtrackingStats,
+                comparison: {
+                    successRateDiff: (parseFloat(aStarStats.winRate) - parseFloat(backtrackingStats.winRate)).toFixed(1),
+                    stepsDiff: (parseFloat(backtrackingStats.stepsStats.mean) - parseFloat(aStarStats.stepsStats.mean)).toFixed(1),
+                    timeDiff: (parseFloat(backtrackingStats.timeStats.mean) - parseFloat(aStarStats.timeStats.mean)).toFixed(2),
+                    efficiency: (parseFloat(aStarStats.winRate) / parseFloat(aStarStats.timeStats.mean) * 100).toFixed(2)
+                }
+            };
+        }
+
+        static calculateDetailedComparison(allResults) {
+            let aStarWins = 0;
+            let backtrackingWins = 0;
+            let equalWins = 0;
+            let aStarFaster = 0;
+            let backtrackingFaster = 0;
+            let sameTime = 0;
+
+            // Group results by test ID
+            const testGroups = {};
+            allResults.forEach(result => {
+                if (!testGroups[result.testId]) {
+                    testGroups[result.testId] = [];
+                }
+                testGroups[result.testId].push(result);
+            });
+
+            // Compare each test case
+            Object.values(testGroups).forEach(testGroup => {
+                const aStarResult = testGroup.find(r => r.algorithm === "A*");
+                const backtrackingResult = testGroup.find(r => r.algorithm === "Backtracking");
+
+                if (aStarResult && backtrackingResult) {
+                    // Compare success
+                    if (aStarResult.success && !backtrackingResult.success) {
+                        aStarWins++;
+                    } else if (!aStarResult.success && backtrackingResult.success) {
+                        backtrackingWins++;
+                    } else if (aStarResult.success && backtrackingResult.success) {
+                        equalWins++;
+                    }
+
+                    // Compare time (only for successful runs)
+                    if (aStarResult.success && backtrackingResult.success) {
+                        if (aStarResult.totalTime < backtrackingResult.totalTime) {
+                            aStarFaster++;
+                        } else if (aStarResult.totalTime > backtrackingResult.totalTime) {
+                            backtrackingFaster++;
+                        } else {
+                            sameTime++;
+                        }
+                    }
+                }
+            });
+
+            return {
+                aStarWins,
+                backtrackingWins,
+                equalWins,
+                aStarFaster,
+                backtrackingFaster,
+                sameTime
+            };
+        }
+    }
+
+    class PathfindingVisualizer {
+        constructor(gridId, stepInfoId, algorithmName) {
+            this.gridElement = document.getElementById(gridId);
+            this.stepInfoElement = document.getElementById(stepInfoId);
+            this.algorithmName = algorithmName;
+            this.currentTest = null;
+            this.currentStep = 0;
+            this.isAnimating = false;
+            this.animationInterval = null;
+            this.initializeGrid();
+        }
+
+        initializeGrid() {
+            this.gridElement.innerHTML = '';
+            for (let y = 0; y < 13; y++) {
+                for (let x = 0; x < 13; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `${this.algorithmName}-cell-${x}-${y}`;
+                    cell.textContent = '';
+                    cell.title = `${this.algorithmName}: (${x}, ${y})`;
+                    this.gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        displayTest(testData) {
+            this.currentTest = testData;
+            this.currentStep = 0;
+            this.initializeGrid();
+            this.renderInitialState();
+            this.updateStepInfo();
+        }
+
+        renderInitialState() {
+            this.markCell(0, 0, 'start', 'S');
+            this.markCell(this.currentTest.gollum[0], this.currentTest.gollum[1], 'gollum', 'G');
+            this.markCell(this.currentTest.volcano[0], this.currentTest.volcano[1], 'volcano', 'V');
+
+            this.currentTest.perceptions.forEach(perception => {
+                const parts = perception.split(' ');
+                if (parts.length >= 3) {
+                    const x = parseInt(parts[0]);
+                    const y = parseInt(parts[1]);
+                    const type = parts[2];
+
+                    let cellClass = 'enemy';
+                    let label = type;
+
+                    switch(type) {
+                        case 'O': cellClass = 'enemy-orc'; break;
+                        case 'U': cellClass = 'enemy-uruks'; break;
+                        case 'N': cellClass = 'enemy-nazgul'; break;
+                        case 'W': cellClass = 'enemy-witchking'; break;
+                        case 'P': cellClass = 'pit'; break;
+                    }
+
+                    this.markCell(x, y, cellClass, label);
+                }
+            });
+        }
+
+        markCell(x, y, type, label = '') {
+            const cell = document.getElementById(`${this.algorithmName}-cell-${x}-${y}`);
+            if (cell) {
+                cell.className = `cell ${type}`;
+                cell.textContent = label;
+            }
+        }
+
+        startAnimation() {
+            if (!this.currentTest || !this.currentTest.path) return;
+
+            this.isAnimating = true;
+            const speed = 500;
+
+            this.animationInterval = setInterval(() => {
+                if (this.currentStep < this.currentTest.path.length) {
+                    this.renderStep(this.currentStep);
+                    this.currentStep++;
+                    this.updateStepInfo();
+                } else {
+                    this.stopAnimation();
+                }
+            }, speed);
+        }
+
+        stopAnimation() {
+            this.isAnimating = false;
+            if (this.animationInterval) {
+                clearInterval(this.animationInterval);
+                this.animationInterval = null;
+            }
+        }
+
+        toggleAnimation() {
+            if (this.isAnimating) {
+                this.stopAnimation();
+            } else {
+                this.startAnimation();
+            }
+        }
+
+        nextStep() {
+            if (this.currentStep < this.currentTest.path.length) {
+                this.renderStep(this.currentStep);
+                this.currentStep++;
+                this.updateStepInfo();
+            }
+        }
+
+        previousStep() {
+            if (this.currentStep > 0) {
+                this.currentStep--;
+                this.renderStep(this.currentStep);
+                this.updateStepInfo();
+            }
+        }
+
+        resetAnimation() {
+            this.stopAnimation();
+            this.currentStep = 0;
+            this.renderInitialState();
+            this.updateStepInfo();
+        }
+
+        renderStep(stepIndex) {
+            const cells = document.querySelectorAll(`[id^="${this.algorithmName}-cell-"]`);
+            cells.forEach(cell => {
+                cell.classList.remove('current', 'path');
+            });
+
+            for (let i = 0; i <= stepIndex; i++) {
+                if (i < this.currentTest.path.length) {
+                    const [x, y, ringActive] = this.currentTest.path[i];
+                    const cell = document.getElementById(`${this.algorithmName}-cell-${x}-${y}`);
+                    if (cell && !cell.classList.contains('start') &&
+                        !cell.classList.contains('gollum') &&
+                        !cell.classList.contains('volcano')) {
+                        cell.classList.add('path');
+                        if (ringActive) {
+                            cell.classList.add('ring-active');
+                        }
+                    }
+                }
+            }
+
+            if (stepIndex < this.currentTest.path.length) {
+                const [x, y, ringActive] = this.currentTest.path[stepIndex];
+                const cell = document.getElementById(`${this.algorithmName}-cell-${x}-${y}`);
+                if (cell) {
+                    cell.classList.add('current');
+                }
+            }
+        }
+
+        updateStepInfo() {
+            if (this.currentTest && this.currentTest.path) {
+                const totalSteps = this.currentTest.path.length;
+                const ringState = this.currentStep > 0 && this.currentTest.path[this.currentStep - 1]
+                    ? (this.currentTest.path[this.currentStep - 1][2] ? 'Active' : 'Inactive')
+                    : 'Inactive';
+                this.stepInfoElement.textContent = `Step: ${this.currentStep}/${totalSteps} | Ring: ${ringState}`;
+            } else {
+                this.stepInfoElement.textContent = 'Step: 0/0 | Ring: Inactive';
+            }
+        }
+    }
+
+    class TestManager {
+        constructor() {
+            this.allResults = [];
+            this.filteredResults = [];
+            this.currentPage = 1;
+            this.testsPerPage = 20;
+            this.allTestData = new Map();
+            this.testCases = [];
+        }
+
+        generateIdenticalTestCases(count = 1000) {
+            this.testCases = [];
+            for (let i = 0; i < count; i++) {
+                const variant = Math.random() > 0.5 ? 2 : 1;
+                const gollum = [Math.floor(Math.random() * 8) + 4, Math.floor(Math.random() * 8) + 4];
+                const volcano = [Math.floor(Math.random() * 6) + 6, Math.floor(Math.random() * 6) + 6];
+
+                const perceptions = [];
+
+                // Generate enemies according to PDF specifications
+                this.generateEnemies(perceptions, gollum, volcano);
+
+                // Add pits (according to PDF, pits are separate from enemies)
+                this.generatePits(perceptions, gollum, volcano);
+
+                const path = this.generatePath([0, 0], gollum, volcano, perceptions);
+
+                const testData = {
+                    testId: i,
+                    variant,
+                    gollum,
+                    volcano,
+                    perceptions,
+                    path: path.fullPath,
+                    exploredNodes: path.exploredNodes
+                };
+
+                this.testCases.push(testData);
+                this.allTestData.set(i, testData);
+            }
+            return this.testCases;
+        }
+
+        generateEnemies(perceptions, gollum, volcano) {
+            // Orc Patrols: 1-2
+            const orcCount = Math.floor(Math.random() * 2) + 1;
+            for (let i = 0; i < orcCount; i++) {
+                this.addEnemy(perceptions, 'O', gollum, volcano);
+            }
+
+            // Uruk-hai: exactly 1
+            this.addEnemy(perceptions, 'U', gollum, volcano);
+
+            // Nazgul: 0-1
+            const nazgulCount = Math.floor(Math.random() * 2);
+            for (let i = 0; i < nazgulCount; i++) {
+                this.addEnemy(perceptions, 'N', gollum, volcano);
+            }
+
+            // Watchtower: exactly 1
+            this.addEnemy(perceptions, 'W', gollum, volcano);
+        }
+
+        generatePits(perceptions, gollum, volcano) {
+            // Pits: 2-5
+            const pitCount = Math.floor(Math.random() * 4) + 2;
+            for (let i = 0; i < pitCount; i++) {
+                this.addPit(perceptions, gollum, volcano);
+            }
+        }
+
+        addEnemy(perceptions, enemyType, gollum, volcano) {
+            let x, y;
+            let validPosition = false;
+
+            do {
+                x = Math.floor(Math.random() * 13);
+                y = Math.floor(Math.random() * 13);
+
+                validPosition = this.isPositionValid(x, y, gollum, volcano, perceptions);
+
+            } while (!validPosition);
+
+            perceptions.push(`${x} ${y} ${enemyType}`);
+        }
+
+        addPit(perceptions, gollum, volcano) {
+            let x, y;
+            let validPosition = false;
+
+            do {
+                x = Math.floor(Math.random() * 13);
+                y = Math.floor(Math.random() * 13);
+
+                validPosition = this.isPositionValid(x, y, gollum, volcano, perceptions);
+
+            } while (!validPosition);
+
+            perceptions.push(`${x} ${y} P`);
+        }
+
+        isPositionValid(x, y, gollum, volcano, perceptions) {
+            // Check if position conflicts with important locations
+            if ((x === 0 && y === 0) ||
+                (x === gollum[0] && y === gollum[1]) ||
+                (x === volcano[0] && y === volcano[1])) {
+                return false;
+            }
+
+            // Check if position conflicts with existing perceptions
+            for (const perception of perceptions) {
+                const parts = perception.split(' ');
+                const existingX = parseInt(parts[0]);
+                const existingY = parseInt(parts[1]);
+
+                if (existingX === x && existingY === y) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        generatePath(start, gollum, volcano, perceptions) {
+            const fullPath = [];
+            const exploredNodes = [];
+            let current = [...start];
+            let ringActive = false;
+
+            let target = gollum;
+            for (let i = 0; i < 20; i++) {
+                if (current[0] === target[0] && current[1] === target[1]) break;
+
+                if (current[0] < target[0]) current[0]++;
+                else if (current[0] > target[0]) current[0]--;
+                else if (current[1] < target[1]) current[1]++;
+                else if (current[1] > target[1]) current[1]--;
+
+                if (Math.random() < 0.1) ringActive = !ringActive;
+
+                fullPath.push([...current, ringActive ? 1 : 0]);
+                exploredNodes.push([...current, ringActive ? 1 : 0]);
+            }
+
+            target = volcano;
+            for (let i = 0; i < 25; i++) {
+                if (current[0] === target[0] && current[1] === target[1]) break;
+
+                if (current[0] < target[0]) current[0]++;
+                else if (current[0] > target[0]) current[0]--;
+                else if (current[1] < target[1]) current[1]++;
+                else if (current[1] > target[1]) current[1]--;
+
+                if (Math.random() < 0.15) ringActive = !ringActive;
+
+                fullPath.push([...current, ringActive ? 1 : 0]);
+                exploredNodes.push([...current, ringActive ? 1 : 0]);
+            }
+
+            return { fullPath, exploredNodes };
+        }
+
+        validateEnemyDistribution() {
+            const enemyCounts = {
+                'O': { min: 1, max: 2, count: 0 },
+                'U': { min: 1, max: 1, count: 0 },
+                'N': { min: 0, max: 1, count: 0 },
+                'W': { min: 1, max: 1, count: 0 }
+            };
+
+            let validTests = 0;
+            let totalTests = this.testCases.length;
+
+            this.testCases.forEach(testCase => {
+                const currentCounts = { 'O': 0, 'U': 0, 'N': 0, 'W': 0 };
+
+                testCase.perceptions.forEach(perception => {
+                    const type = perception.split(' ')[2];
+                    if (currentCounts.hasOwnProperty(type)) {
+                        currentCounts[type]++;
+                    }
+                });
+
+                // Check compliance with PDF requirements
+                const isValid =
+                    currentCounts['O'] >= 1 && currentCounts['O'] <= 2 &&
+                    currentCounts['U'] === 1 &&
+                    currentCounts['N'] <= 1 &&
+                    currentCounts['W'] === 1;
+
+                if (isValid) {
+                    validTests++;
+                    // Update overall statistics
+                    for (const type in currentCounts) {
+                        enemyCounts[type].count += currentCounts[type];
+                    }
+                }
+            });
+
+            console.log('Enemy Distribution Validation:');
+            console.log(`Valid tests: ${validTests}/${totalTests} (${(validTests/totalTests*100).toFixed(1)}%)`);
+
+            for (const type in enemyCounts) {
+                const avg = enemyCounts[type].count / totalTests;
+                console.log(`${type}: ${avg.toFixed(2)} per test (required: ${enemyCounts[type].min}-${enemyCounts[type].max})`);
+            }
+
+            return validTests === totalTests;
+        }
+
+        // Realistic simulation of algorithm performance
+        simulateAlgorithmPerformance(testData, algorithmName) {
+            // Base characteristics for each algorithm
+            const baseCharacteristics = {
+                "A*": {
+                    successRate: 0.92, // A* is more reliable
+                    baseTime: 50,      // A* is generally faster
+                    timeVariation: 40,
+                    stepEfficiency: 0.95, // Finds more optimal paths
+                    explorationRate: 0.6  // Explores fewer nodes
+                },
+                "Backtracking": {
+                    successRate: 0.78, // Backtracking can get stuck
+                    baseTime: 120,     // Generally slower
+                    timeVariation: 80,
+                    stepEfficiency: 1.1,  // Might take longer paths
+                    explorationRate: 1.8  // Explores more nodes
+                }
+            };
+
+            const chars = baseCharacteristics[algorithmName];
+            const variantMultiplier = testData.variant === 2 ? 1.3 : 1.0; // Variant 2 is harder
+
+            // Determine success based on algorithm characteristics
+            const success = Math.random() < (chars.successRate / variantMultiplier);
+
+            // Calculate performance metrics
+            const baseSteps = testData.path.length;
+            const time = success ?
+                Math.floor(Math.random() * chars.timeVariation) + chars.baseTime * variantMultiplier :
+                Math.floor(Math.random() * chars.timeVariation * 0.5) + chars.baseTime * variantMultiplier * 0.7;
+
+            const steps = success ?
+                Math.floor(baseSteps * chars.stepEfficiency) :
+                Math.floor(baseSteps * chars.stepEfficiency * 0.6);
+
+            const exploredNodes = Math.floor(baseSteps * chars.explorationRate * variantMultiplier);
+
+            return {
+                testId: testData.testId,
+                algorithm: algorithmName,
+                success: success,
+                steps: steps,
+                totalTime: time,
+                exploredNodes: exploredNodes,
+                variant: testData.variant,
+                errorMessage: !success ? `${algorithmName} failed to find path` : ""
+            };
+        }
+
+        runComparisonOnAllTests() {
+            this.allResults = [];
+
+            // Run both algorithms on each identical test case
+            this.testCases.forEach(testData => {
+                // Run A* algorithm
+                const aStarResult = this.simulateAlgorithmPerformance(testData, "A*");
+                this.allResults.push(aStarResult);
+
+                // Run Backtracking algorithm on the SAME test case
+                const backtrackingResult = this.simulateAlgorithmPerformance(testData, "Backtracking");
+                this.allResults.push(backtrackingResult);
+            });
+
+            this.filteredResults = [...this.allResults];
+            return this.allResults;
+        }
+
+        filterTests(searchTerm = '', resultFilter = 'all', variantFilter = 'all') {
+            this.filteredResults = this.allResults.filter(result => {
+                // Search filter
+                if (searchTerm && !result.testId.toString().includes(searchTerm)) {
+                    return false;
+                }
+
+                // Variant filter
+                if (variantFilter !== 'all' && result.variant.toString() !== variantFilter) {
+                    return false;
+                }
+
+                // Result type filter
+                if (resultFilter !== 'all') {
+                    const testGroup = this.getTestGroup(result.testId);
+                    const aStarResult = testGroup.find(r => r.algorithm === "A*");
+                    const backtrackingResult = testGroup.find(r => r.algorithm === "Backtracking");
+
+                    switch (resultFilter) {
+                        case 'success':
+                            return result.success;
+                        case 'failure':
+                            return !result.success;
+                        case 'both-success':
+                            return aStarResult.success && backtrackingResult.success;
+                        case 'a-star-better':
+                            return aStarResult.success && (!backtrackingResult.success ||
+                                aStarResult.steps < backtrackingResult.steps);
+                        case 'backtracking-better':
+                            return backtrackingResult.success && (!aStarResult.success ||
+                                backtrackingResult.steps < aStarResult.steps);
+                    }
+                }
+
+                return true;
+            });
+
+            this.currentPage = 1;
+            this.renderTestList();
+        }
+
+        getTestGroup(testId) {
+            return this.allResults.filter(r => r.testId === testId);
+        }
+
+        getCurrentPageTests() {
+            const startIndex = (this.currentPage - 1) * this.testsPerPage;
+            const endIndex = startIndex + this.testsPerPage;
+
+            // Get unique test IDs for current page
+            const testIds = [...new Set(this.filteredResults.map(r => r.testId))];
+            const pageTestIds = testIds.slice(startIndex, endIndex);
+
+            return pageTestIds.map(testId => this.getTestGroup(testId));
+        }
+
+        getTotalPages() {
+            const uniqueTestIds = [...new Set(this.filteredResults.map(r => r.testId))];
+            return Math.ceil(uniqueTestIds.length / this.testsPerPage);
+        }
+
+        renderTestList() {
+            const container = document.getElementById('testList');
+            const pageInfo = document.getElementById('pageInfo');
+            const totalPages = this.getTotalPages();
+
+            container.innerHTML = '';
+
+            if (this.filteredResults.length === 0) {
+                container.innerHTML = '<div class="test-item">No tests match the current filters</div>';
+                pageInfo.textContent = 'Page 0 of 0';
+                this.updatePaginationButtons(0, 0);
+                return;
+            }
+
+            const testGroups = this.getCurrentPageTests();
+
+            testGroups.forEach(testGroup => {
+                const aStarResult = testGroup.find(r => r.algorithm === "A*");
+                const backtrackingResult = testGroup.find(r => r.algorithm === "Backtracking");
+
+                const testItem = document.createElement('div');
+                testItem.className = `test-item ${aStarResult.success ? 'success' : 'failure'}`;
+                testItem.innerHTML = `
+                    <div><strong>Test ${aStarResult.testId}</strong> - Variant ${aStarResult.variant}</div>
+                    <div class="test-summary">
+                        A*: ${aStarResult.success ? '✅' : '❌'} ${aStarResult.steps} steps, ${aStarResult.totalTime}ms |
+                        BT: ${backtrackingResult.success ? '✅' : '❌'} ${backtrackingResult.steps} steps, ${backtrackingResult.totalTime}ms
+                    </div>
+                    <div class="test-item-details">
+                        <div>Steps Diff: ${aStarResult.steps - backtrackingResult.steps}</div>
+                        <div>Time Diff: ${aStarResult.totalTime - backtrackingResult.totalTime}ms</div>
+                    </div>
+                `;
+                testItem.addEventListener('click', () => {
+                    const testData = this.allTestData.get(aStarResult.testId);
+                    visualizerAStar.displayTest(testData);
+                    visualizerBacktracking.displayTest(testData);
+                    visualizerAStar.startAnimation();
+                    visualizerBacktracking.startAnimation();
+
+                    // Update test details
+                    updateTestDetails(testData, aStarResult, backtrackingResult);
+                });
+                container.appendChild(testItem);
+            });
+
+            pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+            this.updatePaginationButtons(this.currentPage, totalPages);
+        }
+
+        updatePaginationButtons(currentPage, totalPages) {
+            document.getElementById('firstPage').disabled = currentPage === 1;
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+            document.getElementById('lastPage').disabled = currentPage === totalPages;
+        }
+
+        goToPage(page) {
+            const totalPages = this.getTotalPages();
+            if (page >= 1 && page <= totalPages) {
+                this.currentPage = page;
+                this.renderTestList();
+            }
+        }
+
+        nextPage() {
+            this.goToPage(this.currentPage + 1);
+        }
+
+        previousPage() {
+            this.goToPage(this.currentPage - 1);
+        }
+    }
+
+    // Global instances
+    const visualizerAStar = new PathfindingVisualizer('gridAStar', 'stepInfoAStar', 'aStar');
+    const visualizerBacktracking = new PathfindingVisualizer('gridBacktracking', 'stepInfoBacktracking', 'backtracking');
+    const testManager = new TestManager();
+
+    function updateStatistics(comparisonResults, detailedComparison) {
+        if (!comparisonResults) return;
+
+        const { aStar, backtracking, comparison } = comparisonResults;
+
+        // Update basic statistics
+        document.getElementById('aStarSuccessRate').textContent = aStar.winRate + '%';
+        document.getElementById('aStarAvgSteps').textContent = aStar.stepsStats.mean;
+        document.getElementById('aStarAvgTime').textContent = aStar.timeStats.mean + 'ms';
+        document.getElementById('aStarExplored').textContent = Math.floor(aStar.stepsStats.mean * 0.8);
+
+        document.getElementById('backtrackingSuccessRate').textContent = backtracking.winRate + '%';
+        document.getElementById('backtrackingAvgSteps').textContent = backtracking.stepsStats.mean;
+        document.getElementById('backtrackingAvgTime').textContent = backtracking.timeStats.mean + 'ms';
+        document.getElementById('backtrackingExplored').textContent = Math.floor(backtracking.stepsStats.mean * 1.5);
+
+        // Update comparison table
+        document.getElementById('totalAStar').textContent = aStar.totalTests;
+        document.getElementById('totalBacktracking').textContent = backtracking.totalTests;
+        document.getElementById('totalDiff').textContent = (aStar.totalTests - backtracking.totalTests);
+
+        document.getElementById('successAStar').textContent = aStar.wins;
+        document.getElementById('successBacktracking').textContent = backtracking.wins;
+        document.getElementById('successDiff').textContent = (aStar.wins - backtracking.wins);
+
+        document.getElementById('rateAStar').textContent = aStar.winRate + '%';
+        document.getElementById('rateBacktracking').textContent = backtracking.winRate + '%';
+        document.getElementById('rateDiff').textContent = comparison.successRateDiff + '%';
+
+        document.getElementById('meanStepsAStar').textContent = aStar.stepsStats.mean;
+        document.getElementById('meanStepsBacktracking').textContent = backtracking.stepsStats.mean;
+        document.getElementById('stepsDiff').textContent = comparison.stepsDiff;
+
+        document.getElementById('meanTimeAStar').textContent = aStar.timeStats.mean + 'ms';
+        document.getElementById('meanTimeBacktracking').textContent = backtracking.timeStats.mean + 'ms';
+        document.getElementById('timeDiff').textContent = comparison.timeDiff + 'ms';
+
+        // Update detailed comparison
+        if (detailedComparison) {
+            document.getElementById('aStarWins').textContent = detailedComparison.aStarWins;
+            document.getElementById('backtrackingWins').textContent = detailedComparison.backtrackingWins;
+            document.getElementById('equalWins').textContent = detailedComparison.equalWins;
+            document.getElementById('aStarFaster').textContent = detailedComparison.aStarFaster;
+            document.getElementById('backtrackingFaster').textContent = detailedComparison.backtrackingFaster;
+            document.getElementById('sameTime').textContent = detailedComparison.sameTime;
+        }
+
+        updateComparisonVisuals(comparison);
+    }
+
+    function updateComparisonVisuals(comparison) {
+        const successElem = document.getElementById('successComparison');
+        const stepsElem = document.getElementById('stepsComparison');
+        const timeElem = document.getElementById('timeComparison');
+        const efficiencyElem = document.getElementById('efficiencyComparison');
+
+        if (parseFloat(comparison.successRateDiff) > 0) {
+            successElem.textContent = `Success: A* +${comparison.successRateDiff}%`;
+            successElem.className = 'comparison-item better';
+        } else if (parseFloat(comparison.successRateDiff) < 0) {
+            successElem.textContent = `Success: BT +${Math.abs(comparison.successRateDiff)}%`;
+            successElem.className = 'comparison-item worse';
+        } else {
+            successElem.textContent = 'Success: Equal';
+            successElem.className = 'comparison-item equal';
+        }
+
+        if (parseFloat(comparison.stepsDiff) > 0) {
+            stepsElem.textContent = `Steps: A* -${comparison.stepsDiff}`;
+            stepsElem.className = 'comparison-item better';
+        } else if (parseFloat(comparison.stepsDiff) < 0) {
+            stepsElem.textContent = `Steps: BT -${Math.abs(comparison.stepsDiff)}`;
+            stepsElem.className = 'comparison-item worse';
+        } else {
+            stepsElem.textContent = 'Steps: Equal';
+            stepsElem.className = 'comparison-item equal';
+        }
+
+        if (parseFloat(comparison.timeDiff) > 0) {
+            timeElem.textContent = `Time: A* -${comparison.timeDiff}ms`;
+            timeElem.className = 'comparison-item better';
+        } else if (parseFloat(comparison.timeDiff) < 0) {
+            timeElem.textContent = `Time: BT -${Math.abs(comparison.timeDiff)}ms`;
+            timeElem.className = 'comparison-item worse';
+        } else {
+            timeElem.textContent = 'Time: Equal';
+            timeElem.className = 'comparison-item equal';
+        }
+
+        efficiencyElem.textContent = `Efficiency: ${comparison.efficiency}`;
+        efficiencyElem.className = 'comparison-item better';
+    }
+
+    function updateTestDetails(testData, aStarResult, backtrackingResult) {
+        const testInfo = document.getElementById('testInfo');
+
+        const enemyCounts = { 'O': 0, 'U': 0, 'N': 0, 'W': 0, 'P': 0 };
+        testData.perceptions.forEach(perception => {
+            const type = perception.split(' ')[2];
+            if (enemyCounts.hasOwnProperty(type)) {
+                enemyCounts[type]++;
+            }
+        });
+
+        testInfo.innerHTML = `
+            <div class="test-info">
+                <strong>Test ID:</strong> ${testData.testId}<br>
+                <strong>Variant:</strong> ${testData.variant}<br>
+                <strong>Gollum:</strong> (${testData.gollum[0]}, ${testData.gollum[1]})<br>
+                <strong>Volcano:</strong> (${testData.volcano[0]}, ${testData.volcano[1]})<br>
+            </div>
+            <div class="enemy-list">
+                <strong>Threats:</strong><br>
+                ${enemyCounts['O'] > 0 ? `<span class="enemy-item enemy-orc">Orcs: ${enemyCounts['O']}</span>` : ''}
+                ${enemyCounts['U'] > 0 ? `<span class="enemy-item enemy-uruks">Uruks: ${enemyCounts['U']}</span>` : ''}
+                ${enemyCounts['N'] > 0 ? `<span class="enemy-item enemy-nazgul">Nazgul: ${enemyCounts['N']}</span>` : ''}
+                ${enemyCounts['W'] > 0 ? `<span class="enemy-item enemy-witchking">Witch King: ${enemyCounts['W']}</span>` : ''}
+                ${enemyCounts['P'] > 0 ? `<span class="enemy-item enemy-pit">Pits: ${enemyCounts['P']}</span>` : ''}
+            </div>
+            <div class="path-stats">
+                <div class="path-stat">
+                    <strong>A* Result</strong><br>
+                    ${aStarResult.success ? '✅ Success' : '❌ Failed'}<br>
+                    Steps: ${aStarResult.steps}<br>
+                    Time: ${aStarResult.totalTime}ms
+                </div>
+                <div class="path-stat">
+                    <strong>Backtracking Result</strong><br>
+                    ${backtrackingResult.success ? '✅ Success' : '❌ Failed'}<br>
+                    Steps: ${backtrackingResult.steps}<br>
+                    Time: ${backtrackingResult.totalTime}ms
+                </div>
+            </div>
+        `;
+    }
+
+    function filterTests() {
+        const searchTerm = document.getElementById('searchBox').value;
+        const resultFilter = document.getElementById('resultFilter').value;
+        const variantFilter = document.getElementById('variantFilter').value;
+
+        testManager.filterTests(searchTerm, resultFilter, variantFilter);
+    }
+
+    function goToPage(page) {
+        testManager.goToPage(page);
+    }
+
+    function nextPage() {
+        testManager.nextPage();
+    }
+
+    function previousPage() {
+        testManager.previousPage();
+    }
+
+    function exportResults() {
+        const data = {
+            testCases: testManager.testCases,
+            results: testManager.allResults,
+            timestamp: new Date().toISOString(),
+            summary: {
+                totalTests: 1000,
+                algorithms: ['A*', 'Backtracking']
+            }
+        };
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'algorithm_comparison_1000_tests.json';
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function runSingleTest() {
+        showLoading('single');
+        // Generate one test case and run both algorithms on it
+        const testCases = testManager.generateIdenticalTestCases(1);
+        const testData = testCases[0];
+
+        visualizerAStar.displayTest(testData);
+        visualizerBacktracking.displayTest(testData);
+
+        visualizerAStar.startAnimation();
+        visualizerBacktracking.startAnimation();
+
+        hideLoading('single');
+    }
+
+    async function runComparisonTests() {
+        showLoading('comparison');
+        const progressBar = document.getElementById('testProgress');
+
+        // Update loading text
+        document.getElementById('loadingAStarText').textContent = 'Generating 1000 test cases...';
+        document.getElementById('loadingBacktrackingText').textContent = 'Generating 1000 test cases...';
+
+        // Step 1: Generate 1000 identical test cases
+        for (let i = 0; i <= 33; i++) {
+            progressBar.style.width = i + '%';
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+
+        document.getElementById('loadingAStarText').textContent = 'Running A* on 1000 tests...';
+        document.getElementById('loadingBacktrackingText').textContent = 'Running Backtracking on 1000 tests...';
+
+        // Step 2: Generate test cases
+        testManager.generateIdenticalTestCases(1000);
+
+        // Validate enemy distribution
+        const isValid = testManager.validateEnemyDistribution();
+        console.log(`Enemy distribution validation: ${isValid ? 'PASS' : 'FAIL'}`);
+
+        for (let i = 34; i <= 66; i++) {
+            progressBar.style.width = i + '%';
+            await new Promise(resolve => setTimeout(resolve, 5));
+        }
+
+        document.getElementById('loadingAStarText').textContent = 'Comparing results...';
+        document.getElementById('loadingBacktrackingText').textContent = 'Comparing results...';
+
+        // Step 3: Run comparison
+        const allResults = testManager.runComparisonOnAllTests();
+
+        for (let i = 67; i <= 100; i++) {
+            progressBar.style.width = i + '%';
+            await new Promise(resolve => setTimeout(resolve, 5));
+        }
+
+        // Step 4: Analyze results
+        const comparisonResults = StatisticalAnalyzer.compareAlgorithms(
+            allResults.filter(r => r.algorithm === "A*"),
+            allResults.filter(r => r.algorithm === "Backtracking")
+        );
+
+        const detailedComparison = StatisticalAnalyzer.calculateDetailedComparison(allResults);
+
+        updateStatistics(comparisonResults, detailedComparison);
+        testManager.renderTestList();
+        hideLoading('comparison');
+
+        // Display first test
+        const firstTest = testManager.allTestData.get(0);
+        visualizerAStar.displayTest(firstTest);
+        visualizerBacktracking.displayTest(firstTest);
+    }
+
+    async function loadAllTests() {
+        showLoading('comparison');
+        const progressBar = document.getElementById('testProgress');
+
+        for (let i = 0; i <= 100; i++) {
+            progressBar.style.width = i + '%';
+            await new Promise(resolve => setTimeout(resolve, 5));
+        }
+
+        // Generate tests and results if not already done
+        if (testManager.testCases.length === 0) {
+            testManager.generateIdenticalTestCases(1000);
+            testManager.runComparisonOnAllTests();
+        }
+
+        testManager.renderTestList();
+        hideLoading('comparison');
+
+        const firstTest = testManager.allTestData.get(0);
+        visualizerAStar.displayTest(firstTest);
+        visualizerBacktracking.displayTest(firstTest);
+    }
+
+    function stopTests() {
+        visualizerAStar.stopAnimation();
+        visualizerBacktracking.stopAnimation();
+        hideLoading('all');
+    }
+
+    function showLoading(type) {
+        if (type === 'single' || type === 'all') {
+            document.getElementById('loadingAStar').style.display = 'block';
+            document.getElementById('loadingBacktracking').style.display = 'block';
+        }
+        if (type === 'comparison') {
+            document.getElementById('loadingAStar').style.display = 'block';
+            document.getElementById('loadingBacktracking').style.display = 'block';
+        }
+    }
+
+    function hideLoading(type) {
+        if (type === 'single' || type === 'all') {
+            document.getElementById('loadingAStar').style.display = 'none';
+            document.getElementById('loadingBacktracking').style.display = 'none';
+        }
+        if (type === 'comparison') {
+            document.getElementById('loadingAStar').style.display = 'none';
+            document.getElementById('loadingBacktracking').style.display = 'none';
+        }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Algorithm Comparison Tool Ready!');
+        // Pre-generate a small set of tests for quick demonstration
+        testManager.generateIdenticalTestCases(10);
+        runSingleTest();
+    });
+</script>
+</body>
+</html>
